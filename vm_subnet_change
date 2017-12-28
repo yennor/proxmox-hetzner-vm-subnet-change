@@ -6,7 +6,7 @@
 
 vm_id=103
 
-subnets_v4=(94.130.154.191 94.130.250.104 94.130.250.112)
+subnets_v4=(null 94.130.250.104 94.130.250.112)
 subnets_v6="2a01:4f8:13b:1a9e:: 2a01:4f8:13b:1a9f:: 2a01:4f8:13b:1aa0::"
 gateway_postfix=2
 nic=ens18
