@@ -6,7 +6,8 @@
 
 vm_id=103
 
-subnets="2a01:4f8:13b:1a9e:: 2a01:4f8:13b:1a9f:: 2a01:4f8:13b:1aa0::"
+subnets_v4=(94.130.154.191 94.130.250.104 94.130.250.112)
+subnets_v6="2a01:4f8:13b:1a9e:: 2a01:4f8:13b:1a9f:: 2a01:4f8:13b:1aa0::"
 gateway_postfix=2
 nic=ens18
 
@@ -14,17 +15,27 @@ current_gateway=$(ip -6 route | grep default | awk '{ print $3 }')
 
 if ! ping -c3 $current_gateway > /dev/null 2>&1
 then
-	echo fail
-	for subnet in $subnets
+	i=0;
+	for subnet in $subnets_v6
 	do
-		current_ip=$(ip addr show $nic | grep inet6 | awk '{print $2}' | head -n 1)
-		ip addr delete $current_ip dev $nic
+		current_ipv6=$(ip addr show $nic | grep inet6 | awk '{print $2}' | head -n 1)
+		ip addr delete $current_ipv6 dev $nic
 		ip addr add $subnet$vm_id/64 dev $nic
 		ip route change default via $subnet$gateway_postfix
 		if ping -c3 $subnet$gateway_postfix > /dev/null 2>&1
 		then
+			# we found the correct ipv6 net, now also set ipv4, if there is an ipv4 adress provided
+			# for that subnet
+			if [ ${subnets_v4[i]} != "null" ]
+			then
+				current_ipv4=$(ip -4 addr show $nic | grep inet | awk '{print $2}' | head -n 1)
+				ip addr delete $current_ipv4 dev $nic
+                		ip addr add ${subnets_v4[i]}/32 dev $nic
+				ip route add default via 192.168.1.1 dev $nic onlink
+			fi
 			break
 		fi
+		((i++))
 	done
 fi
 
